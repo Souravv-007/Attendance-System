@@ -102,7 +102,7 @@ Registration always creates an `EMPLOYEE` account and hashes its password with b
 Authorization: Bearer <token>
 ```
 
-Swagger UI documents the implemented routes, authentication, roles, and common responses at `http://localhost:5000/api-docs` when the backend is running. The 41 documented operations cover `/auth`, `/employees`, `/departments`, `/attendance`, `/leaves`, `/corrections`, `/reports`, `/notifications`, `/audit-logs`, `/dashboards`, and `/admin`.
+Swagger UI documents the implemented routes, authentication, roles, and common responses at `http://localhost:5000/api-docs` when the backend is running. The 42 documented operations cover `/auth`, `/employees`, `/departments`, `/attendance`, `/leaves`, `/corrections`, `/reports`, `/notifications`, `/audit-logs`, `/dashboards`, and `/admin`. Administrators can define office start and end times; these timings are used for late and overtime calculations.
 
 ## Password reset / forgot password
 

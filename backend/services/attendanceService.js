@@ -17,7 +17,7 @@ const calculateWorkingMinutes = (checkIn, checkOut) => {
   return workingMinutes;
 };
 
-const calculateOvertimeMinutes = (workingMinutes) => Math.max(workingMinutes - EXPECTED_WORKING_MINUTES, 0);
+const calculateOvertimeMinutes = (workingMinutes, expectedWorkingMinutes = EXPECTED_WORKING_MINUTES) => Math.max(workingMinutes - expectedWorkingMinutes, 0);
 const isCheckoutAfterCheckIn = (checkIn, checkOut) => new Date(checkOut) > new Date(checkIn);
 
 module.exports = {

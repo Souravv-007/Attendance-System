@@ -14,6 +14,7 @@ const {
 } = require('../services/attendanceStatusService');
 const Leave = require('../models/Leave');
 const Holiday = require('../models/Holiday');
+const { getSystemSettings } = require('../services/systemSettingsService');
 
 const checkInEmployee = async (req, res, next) => {
   try {
@@ -25,17 +26,20 @@ const checkInEmployee = async (req, res, next) => {
       return next(new AppError(409, 'Attendance has already been recorded for today'));
     }
 
-    const [approvedLeave, holiday] = await Promise.all([
+    const [approvedLeave, holiday, settings] = await Promise.all([
       Leave.findOne({ employee: req.user._id, status: 'APPROVED', startDate: { $lte: date }, endDate: { $gte: date } }),
       Holiday.findOne({ date }),
+      getSystemSettings(),
     ]);
-    const lateMinutes = calculateLateMinutes(checkIn, date);
+    const lateMinutes = calculateLateMinutes(checkIn, date, settings.officeStart);
     const status = calculateAttendanceStatus({
       checkIn,
       workingMinutes: 0,
       isWeekend: isWeekendDate(date),
       isHoliday: Boolean(holiday),
       hasApprovedLeave: Boolean(approvedLeave),
+      officeStart: settings.officeStart,
+      halfDayThresholdMinutes: settings.halfDayThresholdMinutes,
     });
     const attendance = await Attendance.create({
       employee: req.user._id,
@@ -75,13 +79,13 @@ const checkOutEmployee = async (req, res, next) => {
     const checkOut = new Date();
     if (!isCheckoutAfterCheckIn(attendance.checkIn, checkOut)) return next(new AppError(400, 'Checkout must be after check-in'));
 
-    const workingMinutes = calculateWorkingMinutes(attendance.checkIn, checkOut);
-    const overtimeMinutes = calculateOvertimeMinutes(workingMinutes);
+    const [workingMinutes, settings] = [calculateWorkingMinutes(attendance.checkIn, checkOut), await getSystemSettings()];
+    const overtimeMinutes = calculateOvertimeMinutes(workingMinutes, settings.expectedWorkingMinutes);
     attendance.checkOut = checkOut;
     attendance.workingMinutes = workingMinutes;
     attendance.overtimeMinutes = overtimeMinutes;
     attendance.workingHours = workingMinutes / 60;
-    attendance.status = calculateAttendanceStatus({ checkIn: attendance.checkIn, workingMinutes });
+    attendance.status = calculateAttendanceStatus({ checkIn: attendance.checkIn, workingMinutes, officeStart: settings.officeStart, halfDayThresholdMinutes: settings.halfDayThresholdMinutes });
     await attendance.save();
     await createAuditLog(req.user, 'ATTENDANCE_CHECK_OUT', `Checkout recorded for ${attendance._id}`);
 

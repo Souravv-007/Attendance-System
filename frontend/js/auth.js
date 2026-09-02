@@ -5,6 +5,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const message = document.querySelector('[data-message]');
   const submit = form.querySelector('button[type="submit"]');
   const setMessage = (text, type = 'error') => { message.textContent = text; message.className = `message show ${type}`; };
+  const passwordToggle = form.querySelector('[data-password-toggle]');
+
+  if (passwordToggle) {
+    passwordToggle.addEventListener('click', () => {
+      const passwordInput = form.querySelector('#password');
+      const isVisible = passwordInput.type === 'text';
+      passwordInput.type = isVisible ? 'password' : 'text';
+      passwordToggle.setAttribute('aria-pressed', String(!isVisible));
+      passwordToggle.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+    });
+  }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();

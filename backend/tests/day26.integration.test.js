@@ -22,6 +22,8 @@ test('Day 26 protects admin user management and settings from employee and HR ac
   assert.equal((await request('/api/admin/settings', employeeToken)).response.status, 403);
   const allowed = await request('/api/admin/users', adminToken); assert.equal(allowed.response.status, 200); assert.equal(JSON.stringify(allowed.body).includes('password'), false);
   const settings = await request('/api/admin/settings', adminToken); assert.equal(settings.response.status, 200); assert.equal(typeof settings.body.data.settings.expectedWorkingMinutes, 'number');
+  const updatedSettings = await request('/api/admin/settings', adminToken, { method: 'PUT', body: JSON.stringify({ officeStart: '10:00', officeEnd: '19:00' }) });
+  assert.equal(updatedSettings.response.status, 200); assert.equal(updatedSettings.body.data.settings.officeStart, '10:00'); assert.equal(updatedSettings.body.data.settings.officeEnd, '19:00'); assert.equal(updatedSettings.body.data.settings.expectedWorkingMinutes, 480);
 });
 
 test('Day 26 restricts role and status changes to admin and records privileged audit events', async () => {

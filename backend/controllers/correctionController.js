@@ -11,6 +11,7 @@ const { sendSuccess } = require('../utils/response');
 const { calculateWorkingMinutes, calculateOvertimeMinutes } = require('../services/attendanceService');
 const { calculateAttendanceStatus, calculateLateMinutes, isWeekendDate } = require('../services/attendanceStatusService');
 const { createNotification } = require('../services/notificationService');
+const { getSystemSettings } = require('../services/systemSettingsService');
 
 const parseOptionalDate = (value) => {
   if (value === undefined || value === null || value === '') return null;
@@ -70,9 +71,10 @@ const approveCorrection = async (req, res, next) => {
       if (!checkIn || (checkOut && checkOut <= checkIn)) throw new AppError(400, 'Corrected attendance times are invalid');
       attendance.checkIn = checkIn;
       if (correction.requestedCheckOut) attendance.checkOut = checkOut;
+      const settings = await getSystemSettings();
       if (attendance.checkOut) {
         attendance.workingMinutes = calculateWorkingMinutes(attendance.checkIn, attendance.checkOut);
-        attendance.overtimeMinutes = calculateOvertimeMinutes(attendance.workingMinutes);
+        attendance.overtimeMinutes = calculateOvertimeMinutes(attendance.workingMinutes, settings.expectedWorkingMinutes);
         attendance.workingHours = attendance.workingMinutes / 60;
       }
       const workingDate = getWorkingDate(attendance.date);
@@ -80,8 +82,8 @@ const approveCorrection = async (req, res, next) => {
         Leave.findOne({ employee: attendance.employee, status: 'APPROVED', startDate: { $lte: workingDate }, endDate: { $gte: workingDate } }),
         Holiday.findOne({ date: workingDate }),
       ]);
-      attendance.lateMinutes = calculateLateMinutes(attendance.checkIn, workingDate);
-      attendance.status = calculateAttendanceStatus({ checkIn: attendance.checkIn, workingMinutes: attendance.workingMinutes, isWeekend: isWeekendDate(workingDate), isHoliday: Boolean(holiday), hasApprovedLeave: Boolean(approvedLeave) });
+      attendance.lateMinutes = calculateLateMinutes(attendance.checkIn, workingDate, settings.officeStart);
+      attendance.status = calculateAttendanceStatus({ checkIn: attendance.checkIn, workingMinutes: attendance.workingMinutes, isWeekend: isWeekendDate(workingDate), isHoliday: Boolean(holiday), hasApprovedLeave: Boolean(approvedLeave), officeStart: settings.officeStart, halfDayThresholdMinutes: settings.halfDayThresholdMinutes });
       correction.status = 'APPROVED';
       correction.reviewer = req.user._id;
       correction.reviewedAt = new Date();

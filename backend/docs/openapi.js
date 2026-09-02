@@ -42,6 +42,6 @@ module.exports = {
     '/admin/users': { get: operation('List users (ADMIN)'), },
     '/admin/users/{id}': { put: operation('Update a user (ADMIN)') },
     '/admin/users/{id}/status': { patch: operation('Change a user account status (ADMIN)') },
-    '/admin/settings': { get: operation('Get system settings (ADMIN)') },
+    '/admin/settings': { get: operation('Get system settings (ADMIN)'), put: operation('Update office start and end times (ADMIN)') },
   },
 };
