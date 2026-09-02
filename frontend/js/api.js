@@ -1,14 +1,15 @@
 const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.protocol === 'file:';
 const API_BASE = window.ATTENDANCE_API_BASE || (isLocalFrontend ? 'http://localhost:5000/api' : '/api');
 
-if (!document.title.startsWith('Employee Attendance Management System')) {
+if (document.title && !document.title.startsWith('Employee Attendance Management System')) {
   document.title = `Employee Attendance Management System - ${document.title}`;
 }
-if (!document.querySelector('link[rel="icon"]')) {
+if (document.createElement && document.head && !document.querySelector('link[rel="icon"]')) {
   const favicon = document.createElement('link');
   favicon.rel = 'icon';
   favicon.type = 'image/svg+xml';
-  favicon.href = window.location.pathname.includes('/pages/') ? '../favicon.svg' : 'favicon.svg';
+  const isPage = typeof window.location.pathname === 'string' && window.location.pathname.includes('/pages/');
+  favicon.href = isPage ? '../favicon.svg' : 'favicon.svg';
   document.head.append(favicon);
 }
 
@@ -38,7 +39,10 @@ const apiRequest = async (path, options = {}) => {
   try {
     response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   } catch (error) {
-    const connectionError = new Error('Unable to reach the attendance server. Start the backend on http://localhost:5000 and try again.');
+    const guidance = isLocalFrontend
+      ? ' Start the backend on http://localhost:5000 and try again.'
+      : ' Please try again shortly.';
+    const connectionError = new Error(`Unable to reach the attendance server.${guidance}`);
     connectionError.cause = error;
     throw connectionError;
   }

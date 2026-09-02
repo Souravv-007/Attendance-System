@@ -10,6 +10,8 @@ module.exports = {
   paths: {
     '/auth/register': { post: operation('Register an employee account', { security: false, responses: { 201: { description: 'Account created' }, 409: { description: 'Duplicate email or employee ID' } } }) },
     '/auth/login': { post: operation('Sign in and receive a JWT', { security: false, responses: { 429: { description: 'Too many authentication attempts' } } }) },
+    '/auth/forgot-password': { post: operation('Request a password reset for a valid email. Always returns the same generic success message for registered and unregistered accounts.', { security: false, responses: { 400: { description: 'Invalid email address' }, 429: { description: 'Too many password reset attempts' } } }) },
+    '/auth/reset-password': { post: operation('Reset a password using an unexpired, single-use reset token and a password of at least eight characters.', { security: false, responses: { 400: { description: 'Invalid, expired, or already-used reset link; or invalid password' }, 429: { description: 'Too many password reset attempts' } } }) },
     '/auth/me': { get: operation('Get the authenticated user'), patch: operation('Update the authenticated user profile') },
     '/employees': { get: operation('List employees (HR or ADMIN; supports page, limit, search, role, department, isActive)'), post: operation('Create an employee (HR or ADMIN)') },
     '/employees/{id}': { get: operation('Get an employee by ID (HR or ADMIN)'), put: operation('Update an employee (HR or ADMIN; role changes require ADMIN)') },

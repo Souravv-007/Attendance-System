@@ -25,6 +25,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
+    "nodemailer": "^9.1.1",
     "swagger-ui-express": "^5.0.1"
   }
 }

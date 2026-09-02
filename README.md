@@ -1,122 +1,166 @@
 # Employee Attendance Management System
 
-## Project Description
-This project is a beginner-friendly Employee Attendance Management System built with HTML, CSS, JavaScript, Node.js, Express.js, MongoDB Atlas, and Mongoose. The goal is to manage employee attendance, leave requests, corrections, and role-based access for employees, HR, and admins.
+An employee attendance application with separate employee, HR, and administrator workspaces. It records server-timed check-ins and check-outs, manages leave and correction requests, exposes reporting and audit data to authorized staff, and uses a vanilla HTML/CSS/JavaScript frontend with an Express and MongoDB backend.
 
 ## Features
-- Employee registration and login
-- Role-based dashboards for employee, HR, and admin
-- Attendance tracking with check-in and check-out
-- Leave request workflow
-- Attendance correction requests
-- Basic reporting structure for future development
-- Security conventions using environment variables, JWT, bcrypt, Helmet, and rate limiting
 
-## Technology Stack
-- Frontend: HTML, CSS, Vanilla JavaScript
-- Backend: Node.js
-- Framework: Express.js
-- Database: MongoDB Atlas
-- ODM: Mongoose
-- Authentication: JWT
-- Password hashing: bcryptjs
-- Validation: express-validator
-- Security: helmet
-- CORS: cors
-- Rate limiting: express-rate-limit
-- Environment variables: dotenv
+- JWT registration, login, session validation, profile updates, account activation, and role-based authorization.
+- Attendance check-in/check-out, attendance history, late and overtime calculation, HR attendance management, and CSV reports.
+- Leave requests, balance validation, HR/admin review, rejection comments, and employee cancellation of pending requests.
+- Attendance correction requests and HR/admin approval or rejection.
+- Department and employee management, HR metrics, administrator user management, notifications, and audit logs.
+- Helmet, CORS origin checks, authentication rate limiting, standardized JSON errors, pagination, and responsive layouts.
 
-## User Roles
-- Employee
-- HR
-- Admin
+## Technology
 
-## Attendance Rules
-- Office starts at 09:30 AM
-- Office ends at 06:30 PM
-- Expected workday is 8 hours
-- A 1-hour break is assumed for working hours calculations
-- Attendance status values include PRESENT, ABSENT, LATE, HALF_DAY, and ON_LEAVE
-- Employees can check in once per day
-- Employees cannot create duplicate attendance records for the same date
+- Frontend: HTML, CSS, vanilla JavaScript
+- Backend: Node.js, Express 4, Mongoose, MongoDB
+- Security: JWT, bcryptjs, Helmet, CORS, express-rate-limit
+- API documentation: OpenAPI 3 with Swagger UI
+- Tests: Node.js built-in test runner
 
-## Leave Rules
-- Leave status values include PENDING, APPROVED, and REJECTED
-- Leave types include SICK, CASUAL, ANNUAL, and OTHER
-- Leave requests are created in PENDING status by default
-- Only HR/Admin can approve or reject leave
+## Roles and permissions
 
-## Project Architecture
-The project follows a layered architecture:
+| Role | Access |
+| --- | --- |
+| `EMPLOYEE` | Own profile, attendance, leave requests, corrections, and notifications. |
+| `HR` | Employee and department management, attendance/leave/correction review, reports, audit logs, and HR dashboard. |
+| `ADMIN` | HR capabilities plus user activation/deactivation, role changes, administrator users, and system settings. |
 
-Routes -> Controllers -> Services -> Models -> MongoDB
+The backend is authoritative: a JWT is validated against the current user record and inactive accounts are rejected.
 
-This keeps routing separate from business logic and database logic.
+## Architecture
 
-## Folder Structure
-- backend/ - server, routes, controllers, models, config, middleware, services
-- frontend/ - HTML, CSS, and JavaScript files for the user interface
-- README.md - project documentation
+```text
+Frontend pages and scripts
+        ↓ fetch /api
+Express routes → authentication/role middleware → controllers
+        ↓                                      ↓
+   validation/response helpers             services
+                                                ↓
+                                         Mongoose models → MongoDB
+```
 
-## Installation
-1. Open the backend directory.
-2. Run npm install
-3. Create your backend/.env file with your MongoDB URI and JWT secret.
-4. Start the backend with npm start.
+- `backend/routes/` maps HTTP endpoints and applies authorization.
+- `backend/middleware/` enforces authentication, roles, request logging, and safe error responses.
+- `backend/controllers/` coordinates requests, persistence, notifications, and audit events.
+- `backend/services/` holds attendance, status, leave, and notification rules.
+- `backend/models/` defines MongoDB collections and indexes.
+- `backend/utils/` provides normalized working dates, API responses, errors, and audit helpers.
+- `frontend/js/api.js` centralizes API base URL, JWT handling, requests, toasts, and session checks. Page scripts render API loading, error, and empty states.
 
-## Environment Variables
-Required variables:
-- PORT=5000
-- MONGO_URI=
-- JWT_SECRET=
+## Project structure
 
-## Running the Backend
-From the backend folder:
+```text
+backend/
+  config/ controllers/ docs/ middleware/ models/ routes/ services/ tests/ utils/
+  app.js server.js .env.example
+frontend/
+  css/styles.css  js/  pages/  tests/  favicon.svg
+```
 
-npm install
-npm start
+## Data models
 
-## Running the Frontend
-Open the frontend HTML files directly in the browser, or host the frontend with a simple local web server when the project progresses further.
+- `User`: name, email, employee ID, password hash, active state, role, department, and leave balances.
+- `Department`: unique name and description.
+- `Attendance`: employee, normalized work date, timestamps, working/overtime minutes, late minutes, and status. A unique employee/date index prevents duplicate records.
+- `Leave`: employee, type, dates, reason, calculated days, reviewer fields, status, and deduction flag.
+- `AttendanceCorrection`: employee, attendance record, requested times, reason, review fields, and status.
+- `Notification`: owned message and read state.
+- `AuditLog`: optional actor, action, details, and timestamp.
+- `Holiday`: unique date and name, used by attendance status calculation.
 
-## API Documentation
-The backend is structured around the following planned endpoints:
-- POST /api/auth/register
-- POST /api/auth/login
-- POST /api/attendance/check-in
-- POST /api/attendance/check-out
-- GET /api/attendance/my-attendance
-- POST /api/leaves
-- GET /api/leaves/my-leaves
-- GET /api/leaves
-- PUT /api/leaves/:id/approve
-- PUT /api/leaves/:id/reject
-- POST /api/corrections
-- GET /api/corrections
-- PUT /api/corrections/:id/approve
-- PUT /api/corrections/:id/reject
-- GET /api/employees
-- GET /api/employees/:id
-- GET /api/reports/attendance
+## Business rules
 
-These routes are planned for later phases and are not fully implemented yet.
+### Attendance
 
-## Security
-- Do not commit .env files
-- Use bcryptjs for password hashing
-- Use JWT for authentication
-- Use Helmet, CORS, and rate limiting
-- Validate incoming requests
-- Keep sensitive configuration in environment variables
+- Check-in and check-out times are generated by the server. Only one attendance record per employee per UTC-normalized working date is permitted.
+- Checkout requires an existing check-in, may occur only once, and must be later than check-in.
+- Working minutes are the elapsed check-in-to-checkout minutes. Overtime is any amount beyond 480 minutes. `workingHours` is stored as minutes divided by 60.
+- Office start is 09:30 UTC. A later check-in is `LATE` and records late minutes. A completed workday below 240 minutes is `HALF_DAY`.
+- Approved leave has priority and produces `ON_LEAVE` at check-in. Weekend or configured holiday check-ins are `ABSENT`; otherwise on-time check-ins are `PRESENT`.
 
-## Future Improvements
-- Full authentication flow
-- Employee and HR dashboards
-- Real attendance calculations and working-hours logic
-- Leave approval workflows
-- Correction approval workflows
-- Attendance reporting and analytics
-- Notification center
-- Admin management screens
+### Leave
 
-This project is currently in the foundation phase only.
+- Available types are `SICK`, `CASUAL`, `ANNUAL`, and `OTHER`; default user balances are 10, 10, 20, and 5 days.
+- Dates are UTC-normalized, inclusive, and start cannot follow end. The reason must contain at least three characters.
+- Requests cannot overlap the employee's pending or approved leave and must fit the current balance.
+- HR or ADMIN may approve or reject pending requests. Approval deducts the leave balance; rejection requires a review comment. Employees may cancel only their own pending requests.
+
+### Corrections, notifications, and audit logging
+
+- An employee can request corrected check-in and/or checkout for an attendance record they own, with a meaningful reason. Only one pending correction per attendance record is allowed.
+- HR or ADMIN approves or rejects pending corrections. Approval updates the attendance and recalculates duration, overtime, late minutes, and status.
+- Notifications are created for selected attendance and leave events. Users can list their own notifications and mark only their own notification as read.
+- Registration, login outcomes, attendance, leave, correction, employee, department, profile, and account-status actions create audit entries where implemented.
+
+## Authentication and API
+
+Registration always creates an `EMPLOYEE` account and hashes its password with bcrypt. Login returns a JWT that expires after seven days. Send it with protected requests:
+
+```http
+Authorization: Bearer <token>
+```
+
+Swagger UI documents the implemented routes, authentication, roles, and common responses at `http://localhost:5000/api-docs` when the backend is running. The 41 documented operations cover `/auth`, `/employees`, `/departments`, `/attendance`, `/leaves`, `/corrections`, `/reports`, `/notifications`, `/audit-logs`, `/dashboards`, and `/admin`.
+
+## Password reset / forgot password
+
+The login page links to the password recovery form. `POST /api/auth/forgot-password` accepts a valid email address and always returns the same general success message for registered and unregistered accounts. For an existing account, the backend creates a cryptographically random 32-byte token, stores only its SHA-256 hash, and expires it after one hour. A new request replaces any previous token.
+
+`POST /api/auth/reset-password` accepts the token and a password of at least eight characters. It hashes the new password with bcrypt, clears the reset hash and expiry, and records a `PASSWORD_RESET` audit event. The same token cannot be reused. Passwords, reset tokens, and hashes are never logged, included in normal user responses, or returned by production reset APIs. Roles are not changed; existing JWTs remain valid until their normal seven-day expiry because the current JWT implementation has no token-version invalidation mechanism.
+
+SMTP delivery uses `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, and `EMAIL_FROM`; set `FRONTEND_URL` to the deployed frontend origin so generated links target `/reset-password.html`. Email delivery is attempted only when every SMTP variable is configured. With `NODE_ENV=development`, no email is sent; the forgot-password response includes a clearly marked development reset URL to make local testing possible. Never use development mode in production.
+
+## Local setup
+
+Use a Node.js version compatible with the project's `package-lock.json` (Node 18 LTS or newer is recommended) and a local MongoDB instance.
+
+1. Copy `backend/.env.example` to `backend/.env`.
+2. Set `MONGO_URI` to your local database (for example `mongodb://127.0.0.1:27017/employee-attendance`) and replace `JWT_SECRET` with a long, unique development secret.
+3. Install and start the backend:
+
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+
+4. Serve the `frontend/` directory from a static web server, then open `index.html`. The API layer automatically uses `http://localhost:5000/api` for local and `file:` usage.
+
+## Tests
+
+```bash
+cd backend
+npm test
+
+# From the repository root
+node --test frontend/tests/*.test.js
+```
+
+Backend tests include the Day 26, Day 27, and Day 28 suites. Frontend tests cover page authorization, dashboard state, logout, and client-side rendering safeguards.
+
+## Production and deployment
+
+The backend honors `PORT` and connects exclusively through `MONGO_URI`, so use a MongoDB Atlas connection string in the deployment environment. Set these variables in the platform's secret/environment settings, never in source control:
+
+| Variable | Purpose |
+| --- | --- |
+| `PORT` | HTTP port supplied by the host (defaults to `5000`). |
+| `MONGO_URI` | Local MongoDB URI or Atlas connection string. |
+| `JWT_SECRET` | Long random secret for signing tokens. |
+| `CORS_ORIGIN` | Comma-separated allowed frontend origins; localhost is automatically accepted for development. |
+| `NODE_ENV` | Set to `development` only for local development; enables the safe development reset URL. |
+| `FRONTEND_URL` | Frontend origin used to build password-reset links. |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM` | SMTP configuration for password-reset email delivery. |
+
+Deploy the backend with `npm start`, set the variables above, and verify `GET /health`. Publish `frontend/` to a static host. With frontend and API on the same origin, requests use `/api`; for separate origins, set `window.ATTENDANCE_API_BASE` before loading `js/api.js` to the deployed API's `/api` URL and include the frontend origin in `CORS_ORIGIN`.
+
+MongoDB Atlas is configured manually: create a database user, allow the deployment host network access, copy its URI into the deployment environment as `MONGO_URI`, and then verify `/health` reports MongoDB as `connected`. No local data is migrated or overwritten by this project.
+
+## Security notes
+
+- `.env` files and `node_modules` are ignored by Git; `.env.example` contains placeholders only.
+- Do not commit Atlas URIs, passwords, JWT secrets, or tokens.
+- Error middleware avoids sending internal server details for server errors.
+- Keep CORS origins specific in production and use HTTPS at the deployment platform.
