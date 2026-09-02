@@ -1,4 +1,16 @@
-const API_BASE = 'http://localhost:5000/api';
+const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.protocol === 'file:';
+const API_BASE = window.ATTENDANCE_API_BASE || (isLocalFrontend ? 'http://localhost:5000/api' : '/api');
+
+if (!document.title.startsWith('Employee Attendance Management System')) {
+  document.title = `Employee Attendance Management System - ${document.title}`;
+}
+if (!document.querySelector('link[rel="icon"]')) {
+  const favicon = document.createElement('link');
+  favicon.rel = 'icon';
+  favicon.type = 'image/svg+xml';
+  favicon.href = window.location.pathname.includes('/pages/') ? '../favicon.svg' : 'favicon.svg';
+  document.head.append(favicon);
+}
 
 const getToken = () => localStorage.getItem('attendance_token');
 const getStoredUser = () => {
@@ -11,6 +23,10 @@ const saveSession = (token, user) => {
 const clearSession = () => {
   localStorage.removeItem('attendance_token');
   localStorage.removeItem('attendance_user');
+};
+const logout = () => {
+  clearSession();
+  window.location.href = 'login.html';
 };
 const dashboardFor = (role) => role === 'EMPLOYEE' ? 'employee-dashboard.html' : role === 'HR' ? 'hr-dashboard.html' : 'admin-dashboard.html';
 
@@ -60,4 +76,13 @@ const requireSession = async () => {
   }
 };
 
-window.AttendanceApp = { apiRequest, clearSession, dashboardFor, getStoredUser, getToken, redirectAuthenticated, requireSession, saveSession, toast };
+window.AttendanceApp = { apiRequest, clearSession, dashboardFor, getStoredUser, getToken, logout, redirectAuthenticated, requireSession, saveSession, toast };
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-logout]').forEach((control) => {
+    control.addEventListener('click', (event) => {
+      event.preventDefault();
+      logout();
+    });
+  });
+});

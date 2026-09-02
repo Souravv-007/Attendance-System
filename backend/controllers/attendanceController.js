@@ -140,7 +140,10 @@ const getAllAttendance = async (req, res, next) => {
     if (req.query.employee) filter.employee = req.query.employee;
     if (req.query.department) {
       const users = await User.find({ department: req.query.department }).select('_id');
-      filter.employee = { $in: users.map((user) => user._id) };
+      const departmentEmployeeIds = users.map((user) => user._id);
+      filter.employee = req.query.employee
+        ? { $in: departmentEmployeeIds.filter((id) => id.toString() === req.query.employee) }
+        : { $in: departmentEmployeeIds };
     }
     if (req.query.status) filter.status = req.query.status;
     if (req.query.from || req.query.to) {

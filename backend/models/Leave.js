@@ -59,6 +59,10 @@ const leaveSchema = new mongoose.Schema(
   }
 );
 
+leaveSchema.index({ employee: 1, createdAt: -1 });
+leaveSchema.index({ status: 1, createdAt: 1 });
+leaveSchema.index({ employee: 1, status: 1, startDate: 1, endDate: 1 });
+
 leaveSchema.pre('validate', function (next) {
   if (this.endDate && this.startDate && this.endDate < this.startDate) {
     this.invalidate('endDate', 'endDate cannot be before startDate');

@@ -1,17 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>User Management</title>
-    <link rel="stylesheet" href="../css/styles.css" />
-  </head>
-  <body>
-    <main>
-      <section class="page">
-        <h2>User Management</h2>
-        <p>Admin user-management page foundation.</p>
-      </section>
-    </main>
-  </body>
-</html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>User Management</title><link rel="stylesheet" href="../css/styles.css" /></head><body data-page="users"><div class="shell"><aside class="sidebar"><p class="brand">Attendance /</p><nav><a href="admin-dashboard.html">Administration</a><a aria-current="page" href="user-management.html">Users</a></nav></aside><main class="content"><header class="topbar"><div><p class="eyebrow">Administration</p><h1>User management</h1></div><button class="secondary" data-refresh type="button">Refresh</button></header><section class="card"><form class="form-grid" data-filters><div class="form-group full"><label>Search</label><input name="search" placeholder="Name, email, or employee ID" /></div><div class="form-group"><label>Role</label><select name="role"><option value="">All roles</option><option>EMPLOYEE</option><option>HR</option><option>ADMIN</option></select></div><div class="form-group"><label>Status</label><select name="isActive"><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select></div><div class="form-group"><label>&nbsp;</label><button class="primary" type="submit">Apply filters</button></div></form></section><section class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>ID</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody data-body></tbody></table></div><p class="state" data-state>Loading users...</p></section></main></div><script src="../js/api.js"></script><script src="../js/admin.js"></script></body></html>

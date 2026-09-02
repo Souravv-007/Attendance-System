@@ -24,6 +24,7 @@
     "express-validator": "^7.0.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.2"
+    "mongoose": "^8.8.2",
+    "swagger-ui-express": "^5.0.1"
   }
 }

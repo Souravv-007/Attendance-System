@@ -9,6 +9,7 @@ const departmentRoutes = require('./departmentRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const auditRoutes = require('./auditRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const adminRoutes = require('./adminRoutes');
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/departments', departmentRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/audit-logs', auditRoutes);
 router.use('/dashboards', dashboardRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -65,7 +65,7 @@ const registerUser = async (req, res, next) => {
   try {
     const { name, employeeId, email, password, department } = req.body;
 
-    if (!name || !employeeId || !email || !password) {
+    if (![name, employeeId, email, password].every((value) => typeof value === 'string' && value.trim())) {
       return sendError(res, next, new AppError(400, 'Name, employee ID, email, and password are required'));
     }
 
@@ -113,7 +113,7 @@ const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (![email, password].every((value) => typeof value === 'string' && value.trim())) {
       return sendError(res, next, new AppError(400, 'Email and password are required'));
     }
 
@@ -150,7 +150,33 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+const updateMyProfile = async (req, res, next) => {
+  try {
+    const allowedFields = ['name', 'email'];
+    const invalidField = Object.keys(req.body).find((key) => !allowedFields.includes(key));
+    if (invalidField) return sendError(res, next, new AppError(403, `Updates to ${invalidField} are not permitted`));
+    if (!req.body.name && !req.body.email) return sendError(res, next, new AppError(400, 'Name or email is required'));
+    const user = await User.findById(req.user._id);
+    if (!user) return sendError(res, next, new AppError(404, 'User not found'));
+    if (req.body.name !== undefined) {
+      if (typeof req.body.name !== 'string') return sendError(res, next, new AppError(400, 'Name must be a string'));
+      if (req.body.name.trim().length < 2) return sendError(res, next, new AppError(400, 'Name must be at least 2 characters long'));
+      user.name = req.body.name.trim();
+    }
+    if (req.body.email !== undefined) {
+      if (typeof req.body.email !== 'string') return sendError(res, next, new AppError(400, 'Email must be a string'));
+      const email = req.body.email.toLowerCase().trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return sendError(res, next, new AppError(400, 'Please provide a valid email address'));
+      user.email = email;
+    }
+    await user.save();
+    await createAuditLog(req.user, 'PROFILE_UPDATED', `User ${user._id} updated own profile fields: ${Object.keys(req.body).join(', ')}`);
+    res.status(200).json({ success: true, message: 'Profile updated successfully', data: { user: sanitizeUser(user) } });
+  } catch (error) { sendError(res, next, error); }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  updateMyProfile,
 };

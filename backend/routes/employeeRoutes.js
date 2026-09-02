@@ -15,6 +15,6 @@ router.get('/', authorizeRoles('HR', 'ADMIN'), getEmployees);
 router.get('/:id', authorizeRoles('HR', 'ADMIN'), getEmployeeById);
 router.post('/', authorizeRoles('HR', 'ADMIN'), createEmployee);
 router.put('/:id', authorizeRoles('HR', 'ADMIN'), updateEmployee);
-router.patch('/:id/status', authorizeRoles('HR', 'ADMIN'), updateEmployeeStatus);
+router.patch('/:id/status', authorizeRoles('ADMIN'), updateEmployeeStatus);
 
 module.exports = router;

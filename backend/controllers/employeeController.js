@@ -5,6 +5,8 @@ const AppError = require('../utils/AppError');
 const { createAuditLog } = require('../utils/audit');
 const { sendSuccess } = require('../utils/response');
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const safeEmployee = (employee) => {
   const data = employee.toObject ? employee.toObject() : { ...employee };
   delete data.password;
@@ -19,10 +21,12 @@ const getEmployees = async (req, res, next) => {
 
     if (req.query.search) {
       const search = req.query.search.trim();
+      if (search.length > 100) return next(new AppError(400, 'Search query must not exceed 100 characters'));
+      const escapedSearch = escapeRegex(search);
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { employeeId: { $regex: search, $options: 'i' } },
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } },
+        { employeeId: { $regex: escapedSearch, $options: 'i' } },
       ];
     }
 
@@ -63,7 +67,7 @@ const getEmployeeById = async (req, res, next) => {
 const createEmployee = async (req, res, next) => {
   try {
     const { name, employeeId, email, password, department, role = 'EMPLOYEE' } = req.body;
-    if (!name || !employeeId || !email || !password) return next(new AppError(400, 'Name, employee ID, email, and password are required'));
+    if (![name, employeeId, email, password].every((value) => typeof value === 'string' && value.trim())) return next(new AppError(400, 'Name, employee ID, email, and password are required'));
     if (password.length < 8) return next(new AppError(400, 'Password must be at least 8 characters long'));
     if (req.user.role !== 'ADMIN' && role === 'ADMIN') return next(new AppError(403, 'HR users cannot create admin accounts'));
     if (!['EMPLOYEE', 'HR', 'ADMIN'].includes(role)) return next(new AppError(400, 'Invalid role'));
@@ -81,14 +85,30 @@ const createEmployee = async (req, res, next) => {
 const updateEmployee = async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) return next(new AppError(400, 'Invalid identifier'));
-    if (req.user.role !== 'ADMIN' && req.body.role === 'ADMIN') return next(new AppError(403, 'HR users cannot assign admin role'));
-    const updates = { ...req.body };
-    if (updates.email) updates.email = updates.email.toLowerCase().trim();
-    if (updates.password) updates.password = await bcrypt.hash(updates.password, 10);
-    const employee = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }).select('-password');
+    const allowedFields = ['name', 'email', 'department', 'password', ...(req.user.role === 'ADMIN' ? ['role'] : [])];
+    const invalidField = Object.keys(req.body).find((key) => !allowedFields.includes(key));
+    if (invalidField) return next(new AppError(403, `Updates to ${invalidField} are not permitted`));
+    if (req.body.role && req.user.role !== 'ADMIN') return next(new AppError(403, 'Only administrators can change roles'));
+    if (req.body.role && !['EMPLOYEE', 'HR', 'ADMIN'].includes(req.body.role)) return next(new AppError(400, 'Invalid role'));
+    if (req.body.password && req.body.password.length < 8) return next(new AppError(400, 'Password must be at least 8 characters long'));
+    const employee = await User.findById(req.params.id);
     if (!employee) return next(new AppError(404, 'Employee not found'));
+    const previousRole = employee.role;
+    if (req.body.name !== undefined) {
+      if (typeof req.body.name !== 'string' || !req.body.name.trim()) return next(new AppError(400, 'Name must be a non-empty string'));
+      employee.name = req.body.name.trim();
+    }
+    if (req.body.email !== undefined) {
+      if (typeof req.body.email !== 'string') return next(new AppError(400, 'Email must be a string'));
+      employee.email = req.body.email.toLowerCase().trim();
+    }
+    if (req.body.department !== undefined) employee.department = req.body.department || null;
+    if (req.body.password) employee.password = await bcrypt.hash(req.body.password, 10);
+    if (req.body.role) employee.role = req.body.role;
+    await employee.save();
     await createAuditLog(req.user, 'EMPLOYEE_UPDATED', `Employee ${employee._id} updated`);
-    sendSuccess(res, 200, 'Employee updated successfully', { employee });
+    if (previousRole !== employee.role) await createAuditLog(req.user, 'USER_ROLE_CHANGED', `User ${employee._id} role changed from ${previousRole} to ${employee.role}`);
+    sendSuccess(res, 200, 'Employee updated successfully', { employee: safeEmployee(employee) });
   } catch (error) {
     next(error);
   }
@@ -100,7 +120,7 @@ const updateEmployeeStatus = async (req, res, next) => {
     if (typeof req.body.isActive !== 'boolean') return next(new AppError(400, 'isActive must be a boolean'));
     const employee = await User.findByIdAndUpdate(req.params.id, { isActive: req.body.isActive }, { new: true }).select('-password');
     if (!employee) return next(new AppError(404, 'Employee not found'));
-    await createAuditLog(req.user, req.body.isActive ? 'EMPLOYEE_ACTIVATED' : 'EMPLOYEE_DEACTIVATED', `Employee ${employee._id} status updated`);
+    await createAuditLog(req.user, req.body.isActive ? 'EMPLOYEE_ACTIVATED' : 'EMPLOYEE_DEACTIVATED', `User ${employee._id} account status changed to ${req.body.isActive ? 'active' : 'inactive'}`);
     sendSuccess(res, 200, 'Employee status updated successfully', { employee });
   } catch (error) {
     next(error);

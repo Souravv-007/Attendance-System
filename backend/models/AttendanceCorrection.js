@@ -50,4 +50,7 @@ const attendanceCorrectionSchema = new mongoose.Schema(
   }
 );
 
+attendanceCorrectionSchema.index({ attendance: 1, status: 1 });
+attendanceCorrectionSchema.index({ status: 1, createdAt: 1 });
+
 module.exports = mongoose.model('AttendanceCorrection', attendanceCorrectionSchema);

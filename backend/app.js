@@ -3,16 +3,19 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
 const routes = require('./routes');
+const openapi = require('./docs/openapi');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const { requestLogger } = require('./middleware/requestLogger');
+const AppError = require('./utils/AppError');
 
 const app = express();
 
 app.use(express.json());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origin === 'null' || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
 
@@ -25,12 +28,13 @@ app.use(cors({
       return callback(null, true);
     }
 
-    return callback(new Error('Origin is not allowed by CORS'));
+    return callback(new AppError(403, 'Origin is not allowed by CORS'));
   },
 }));
 app.use(helmet());
 app.use(requestLogger);
 app.use('/api', routes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi, { customSiteTitle: 'Employee Attendance Management System API' }));
 
 app.get('/', (req, res) => {
   res.status(200).json({

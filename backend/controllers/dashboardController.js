@@ -16,8 +16,9 @@ const getHrDashboard = async (req, res, next) => {
       const users = await User.find({ department: req.query.department }).select('_id');
       filter.employee = { $in: users.map((user) => user._id) };
     }
+    const employeeFilter = { role: 'EMPLOYEE', ...(req.query.department ? { department: req.query.department } : {}) };
     const [totalEmployees, attendance, pendingLeaves] = await Promise.all([
-      User.countDocuments({ role: 'EMPLOYEE' }),
+      User.countDocuments(employeeFilter),
       Attendance.find(filter).populate({ path: 'employee', select: 'department', populate: { path: 'department', select: 'name' } }),
       Leave.countDocuments({ status: 'PENDING' }),
     ]);

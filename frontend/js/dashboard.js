@@ -56,6 +56,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   const action = async (path, button) => { button.disabled = true; button.textContent = 'Saving...'; try { await AttendanceApp.apiRequest(path, { method: 'POST', body: '{}' }); AttendanceApp.toast('Attendance updated successfully.', 'success'); await load(); } catch (error) { AttendanceApp.toast(error.message, 'error'); button.disabled = false; button.textContent = path.includes('check-in') ? 'Check in' : 'Check out'; } };
   checkInButton.addEventListener('click', () => action('/attendance/check-in', checkInButton)); checkOutButton.addEventListener('click', () => action('/attendance/check-out', checkOutButton));
-  document.querySelector('[data-logout]').addEventListener('click', () => { AttendanceApp.clearSession(); window.location.href = 'login.html'; });
   await load();
 });
