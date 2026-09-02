@@ -19,9 +19,24 @@ const attendanceSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    lateMinutes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     workingHours: {
       type: Number,
       default: 0,
+    },
+    workingMinutes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    overtimeMinutes: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     status: {
       type: String,

@@ -3,15 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Employee Dashboard</title>
+    <title>My workday | Attendance System</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
   <body>
-    <main>
-      <section class="page">
-        <h2>Employee Dashboard</h2>
-        <p>Dashboard foundation for future employee features.</p>
-      </section>
-    </main>
+    <div class="shell"><aside class="sidebar"><p class="brand">Attendance /</p><nav><a aria-current="page" href="employee-dashboard.html">Overview</a><a href="attendance.html">Attendance</a><a href="leave.html">Leave</a><a href="profile.html">Profile</a></nav></aside><main class="content"><header class="topbar"><div><p class="eyebrow">Employee workspace</p><h1>Good to see you, <span data-user-name>...</span>.</h1><p data-today>...</p></div><div><span class="badge pending" data-user-role>...</span><button class="secondary" data-logout type="button">Sign out</button></div></header><div class="grid"><section class="card span-4"><p class="eyebrow">Local time</p><p class="metric" data-clock>...</p></section><section class="card span-4"><p class="eyebrow">Attendance records</p><p class="metric" data-attendance-count>...</p></section><section class="card span-4"><p class="eyebrow">Leave balance</p><p class="metric"><span data-balance>...</span> days</p></section><section class="card span-8"><p class="eyebrow">Today</p><h2>Attendance pulse</h2><div class="grid"><div class="span-4"><small>Check in</small><p data-check-in-time>—</p></div><div class="span-4"><small>Check out</small><p data-check-out-time>—</p></div><div class="span-4"><small>Status</small><p><span class="badge pending" data-status>—</span></p></div></div><p data-duration>—</p><div class="actions"><button class="primary" data-check-in type="button">Check in</button><button class="secondary" data-check-out type="button">Check out</button></div><p class="state" data-dashboard-state>Loading...</p></section><section class="card span-4"><p class="eyebrow">Leave requests</p><h2>In review</h2><p data-pending>Loading...</p><a class="button secondary" href="leave.html">View leave</a></section></div></main></div>
+    <script src="../js/api.js"></script><script src="../js/dashboard.js?v=3"></script>
   </body>
 </html>

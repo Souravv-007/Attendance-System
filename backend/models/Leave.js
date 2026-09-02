@@ -25,10 +25,33 @@ const leaveSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    leaveDays: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     status: {
       type: String,
-      enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],
       default: 'PENDING',
+    },
+    reviewer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+    reviewComment: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    balanceDeducted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

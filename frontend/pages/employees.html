@@ -7,11 +7,6 @@
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
   <body>
-    <main>
-      <section class="page">
-        <h2>Employees</h2>
-        <p>Employee list foundation for HR access.</p>
-      </section>
-    </main>
+    <div class="shell"><aside class="sidebar"><p class="brand">Attendance /</p><nav><a href="hr-dashboard.html">Dashboard</a><a aria-current="page" href="employees.html">Employees</a><a href="attendance-management.html">Attendance</a><a href="leave-management.html">Leave</a><a href="reports.html">Reports</a></nav></aside><main class="content"><header class="topbar"><div><p class="eyebrow">People</p><h1>Employees</h1></div><button class="secondary" data-refresh type="button">Refresh</button></header><section class="card"><form class="form-grid" data-filters><div class="form-group full"><label for="search">Search</label><input id="search" name="search" data-filter /></div><div class="form-group"><label for="role">Role</label><select id="role" name="role" data-filter><option value="">All roles</option><option>EMPLOYEE</option><option>HR</option><option>ADMIN</option></select></div><div class="form-group"><label for="isActive">Status</label><select id="isActive" name="isActive" data-filter><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select></div><div class="form-group full"><button class="primary" type="submit">Apply filters</button></div></form></section><section class="card"><div class="table-wrap"><table><thead><tr><th>Employee ID</th><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th></tr></thead><tbody data-body></tbody></table></div><p class="state" data-state>Loading...</p></section></main></div><script src="../js/api.js"></script><script>document.body.dataset.page='employees';</script><script src="../js/hr.js"></script>
   </body>
 </html>

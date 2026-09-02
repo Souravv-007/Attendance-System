@@ -3,30 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
+    <title>Register | Attendance System</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
   <body>
-    <main>
-      <section class="page">
-        <h2>Register</h2>
-        <form>
+    <main class="auth-page">
+      <section class="auth-intro"><p class="eyebrow">A calmer workday</p><h1>Make time count.</h1><p>Create your employee account. Your role and permissions stay under backend control.</p></section>
+      <section class="auth-card">
+        <p class="eyebrow">Employee registration</p><h2>Create account</h2>
+        <div class="message" data-message role="alert"></div>
+        <form data-auth-form="register">
           <div class="form-group">
             <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" placeholder="Enter full name" />
+            <input type="text" id="name" name="name" placeholder="Enter full name" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="employeeId">Employee ID</label><input type="text" id="employeeId" name="employeeId" placeholder="e.g. EMP-1042" required autocomplete="organization-title" />
           </div>
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="you@example.com" />
+            <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
           </div>
           <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Create password" />
+            <input type="password" id="password" name="password" placeholder="At least 8 characters" minlength="8" required autocomplete="new-password" />
           </div>
-          <button type="submit">Register</button>
+          <div class="form-group"><label for="confirmPassword">Confirm password</label><input type="password" id="confirmPassword" name="confirmPassword" minlength="8" required autocomplete="new-password" /></div>
+          <button class="primary" type="submit">Create account</button>
         </form>
+        <p>Already registered? <a href="login.html">Sign in</a></p>
       </section>
     </main>
-    <script src="../js/main.js"></script>
+    <script src="../js/api.js"></script><script src="../js/auth.js"></script>
   </body>
 </html>

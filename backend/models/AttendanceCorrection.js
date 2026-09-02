@@ -30,6 +30,20 @@ const attendanceCorrectionSchema = new mongoose.Schema(
       enum: ['PENDING', 'APPROVED', 'REJECTED'],
       default: 'PENDING',
     },
+    reviewer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    reviewedAt: {
+      type: Date,
+      default: null,
+    },
+    reviewComment: {
+      type: String,
+      default: '',
+      trim: true,
+    },
   },
   {
     timestamps: true,
